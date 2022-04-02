@@ -1,9 +1,16 @@
-[gd_scene load_steps=20 format=2]
+[gd_scene load_steps=38 format=2]
 
 [ext_resource path="res://fonts/LudumDairy.tres" type="DynamicFont" id=1]
 [ext_resource path="res://fonts/RobotoBlack.tres" type="DynamicFont" id=2]
 [ext_resource path="res://fonts/Roboto-Black.ttf" type="DynamicFontData" id=3]
 [ext_resource path="res://buildings/BuildingPlacement.gd" type="Script" id=4]
+[ext_resource path="res://planet/heightmap.tres" type="Texture" id=5]
+[ext_resource path="res://hud/Date.gd" type="Script" id=6]
+[ext_resource path="res://game/Game.gd" type="Script" id=7]
+[ext_resource path="res://hud/Money.gd" type="Script" id=8]
+[ext_resource path="res://hud/Temperature.gd" type="Script" id=9]
+[ext_resource path="res://hud/NewsFeed.gd" type="Script" id=10]
+[ext_resource path="res://gitignore/MeshGenerator.gd" type="Script" id=11]
 
 [sub_resource type="SphereMesh" id=1]
 radial_segments = 256
@@ -12,13 +19,34 @@ rings = 128
 [sub_resource type="SpatialMaterial" id=2]
 albedo_color = Color( 0.87451, 0.643137, 0.419608, 1 )
 
-[sub_resource type="SpatialMaterial" id=8]
-flags_transparent = true
-albedo_color = Color( 0.239216, 0.788235, 0.937255, 0.890196 )
-metallic = 0.5
-roughness = 0.0
-proximity_fade_enable = true
-proximity_fade_distance = 0.02
+[sub_resource type="Shader" id=16]
+code = "shader_type spatial;
+
+uniform sampler2D height_map;
+uniform vec4 color : hint_color;
+
+void fragment() {
+	ALBEDO = color.rgb;
+	
+	float height = texture(height_map, UV).x;
+	//ALPHA = 1.5 - 2.0 * height;
+	
+	ALPHA = 0.7 * (1.0 - smoothstep(0.45, 0.55, height));
+	
+//	if (height > 0.5) {
+//		ALPHA = 0.0;
+//	} else {
+//		ALPHA = 1.0;
+//	}
+}
+"
+
+[sub_resource type="ShaderMaterial" id=17]
+shader = SubResource( 16 )
+shader_param/color = Color( 0.2, 0.568627, 0.92549, 1 )
+shader_param/height_map = ExtResource( 5 )
+
+[sub_resource type="SphereShape" id=29]
 
 [sub_resource type="Shader" id=9]
 code = "shader_type spatial;
@@ -35,16 +63,10 @@ void vertex() {
 }
 "
 
-[sub_resource type="OpenSimplexNoise" id=5]
-
-[sub_resource type="NoiseTexture" id=6]
-seamless = true
-noise = SubResource( 5 )
-
 [sub_resource type="ShaderMaterial" id=4]
 shader = SubResource( 9 )
 shader_param/color = Color( 1, 1, 1, 1 )
-shader_param/height_map = SubResource( 6 )
+shader_param/height_map = ExtResource( 5 )
 
 [sub_resource type="Shader" id=3]
 code = "shader_type spatial;
@@ -65,11 +87,17 @@ void vertex() {
 
 [sub_resource type="ShaderMaterial" id=7]
 shader = SubResource( 3 )
-shader_param/grass_color = Color( 0.227451, 0.733333, 0.121569, 1 )
-shader_param/dirt_color = Color( 0.870588, 0.698039, 0.45098, 1 )
-shader_param/height_map = SubResource( 6 )
+shader_param/grass_color = Color( 0.337255, 0.776471, 0.243137, 1 )
+shader_param/dirt_color = Color( 0.976471, 0.784314, 0.509804, 1 )
+shader_param/height_map = ExtResource( 5 )
 
 [sub_resource type="SphereShape" id=15]
+
+[sub_resource type="ConvexPolygonShape" id=26]
+
+[sub_resource type="ArrayMesh" id=27]
+
+[sub_resource type="ConcavePolygonShape" id=28]
 
 [sub_resource type="StyleBoxFlat" id=10]
 bg_color = Color( 0.207843, 0.207843, 0.207843, 1 )
@@ -95,6 +123,29 @@ border_width_right = 4
 border_width_bottom = 4
 border_color = Color( 0.207843, 0.207843, 0.207843, 1 )
 
+[sub_resource type="StyleBoxEmpty" id=20]
+
+[sub_resource type="StyleBoxEmpty" id=21]
+
+[sub_resource type="StyleBoxEmpty" id=22]
+
+[sub_resource type="StyleBoxEmpty" id=23]
+
+[sub_resource type="StyleBoxEmpty" id=24]
+
+[sub_resource type="Theme" id=25]
+VScrollBar/icons/decrement = null
+VScrollBar/icons/decrement_highlight = null
+VScrollBar/icons/decrement_pressed = null
+VScrollBar/icons/increment = null
+VScrollBar/icons/increment_highlight = null
+VScrollBar/icons/increment_pressed = null
+VScrollBar/styles/grabber = SubResource( 20 )
+VScrollBar/styles/grabber_highlight = SubResource( 21 )
+VScrollBar/styles/grabber_pressed = SubResource( 22 )
+VScrollBar/styles/scroll = SubResource( 23 )
+VScrollBar/styles/scroll_focus = SubResource( 24 )
+
 [sub_resource type="DynamicFont" id=14]
 size = 24
 font_data = ExtResource( 3 )
@@ -106,6 +157,22 @@ border_width_top = 4
 border_width_right = 4
 border_width_bottom = 4
 border_color = Color( 0, 0, 0, 1 )
+
+[sub_resource type="StyleBoxFlat" id=19]
+bg_color = Color( 0, 0, 0, 1 )
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color( 0, 0, 0, 1 )
+
+[sub_resource type="StyleBoxFlat" id=18]
+bg_color = Color( 0.207843, 0.207843, 0.207843, 1 )
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color( 0.207843, 0.207843, 0.207843, 1 )
 
 [node name="Root" type="Spatial"]
 
@@ -120,7 +187,12 @@ material/0 = SubResource( 2 )
 [node name="Water" type="MeshInstance" parent="Planet"]
 transform = Transform( 1.01, 0, 0, 0, 1.01, 0, 0, 0, 1.01, 0, 0, 0 )
 mesh = SubResource( 1 )
-material/0 = SubResource( 8 )
+material/0 = SubResource( 17 )
+
+[node name="WaterCollision" type="StaticBody" parent="Planet/Water" groups=["water"]]
+
+[node name="CollisionShape" type="CollisionShape" parent="Planet/Water/WaterCollision"]
+shape = SubResource( 29 )
 
 [node name="IceCap" type="MeshInstance" parent="Planet"]
 transform = Transform( -4.80825e-08, -1.1, 0, 1.1, -4.80825e-08, 0, 0, 0, 1.1, 0, 0, 0 )
@@ -136,10 +208,25 @@ material/0 = SubResource( 7 )
 [node name="CollisionShape" type="CollisionShape" parent="Planet/StaticBody"]
 shape = SubResource( 15 )
 
+[node name="StaticBody2" type="StaticBody" parent="Planet"]
+
+[node name="CollisionShape" type="CollisionShape" parent="Planet/StaticBody2"]
+shape = SubResource( 26 )
+
+[node name="MeshInstance" type="MeshInstance" parent="Planet"]
+mesh = SubResource( 27 )
+script = ExtResource( 11 )
+heightmap = ExtResource( 5 )
+
+[node name="LandCollision" type="StaticBody" parent="Planet/MeshInstance" groups=["land"]]
+
+[node name="CollisionShape" type="CollisionShape" parent="Planet/MeshInstance/LandCollision"]
+shape = SubResource( 28 )
+
 [node name="Camera Root" type="Spatial" parent="."]
 
 [node name="Camera" type="Camera" parent="Camera Root"]
-transform = Transform( 1, 0, 0, 1.49012e-08, 1, 1.49012e-08, -2.98023e-08, 1.49012e-08, 1, 1.19209e-07, 0, 2.43894 )
+transform = Transform( 1, 0, 0, 1.49012e-08, 1, 1.49012e-08, -2.98023e-08, 1.49012e-08, 1, 0, 0, 2.2 )
 
 [node name="Camera Root2" type="Spatial" parent="."]
 transform = Transform( 0.873458, 0.0465234, 0.484672, 0, 0.995425, -0.0955504, -0.4869, 0.0834592, 0.869462, 0, 0, 0 )
@@ -147,9 +234,6 @@ transform = Transform( 0.873458, 0.0465234, 0.484672, 0, 0.995425, -0.0955504, -
 [node name="HUD" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="TR" type="HBoxContainer" parent="HUD"]
 anchor_left = 1.0
@@ -189,12 +273,9 @@ __meta__ = {
 [node name="BL" type="VBoxContainer" parent="HUD"]
 anchor_top = 1.0
 anchor_bottom = 1.0
-margin_top = -64.0
-margin_right = 417.0
+margin_top = -67.0
+margin_right = 429.0
 custom_constants/separation = 0
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="BREAKING NEWS" type="Label" parent="HUD/BL"]
 margin_right = 133.0
@@ -203,14 +284,42 @@ size_flags_horizontal = 0
 custom_fonts/font = ExtResource( 2 )
 custom_styles/normal = SubResource( 12 )
 text = "BREAKING NEWS"
+uppercase = true
 
-[node name="Feed" type="Label" parent="HUD/BL"]
+[node name="NewsFeed" type="ScrollContainer" parent="HUD/BL"]
 margin_top = 27.0
+margin_right = 429.0
+margin_bottom = 67.0
+rect_min_size = Vector2( 0, 40 )
+mouse_filter = 2
+theme = SubResource( 25 )
+scroll_horizontal_enabled = false
+script = ExtResource( 10 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/BL/NewsFeed"]
 margin_right = 417.0
-margin_bottom = 64.0
+margin_bottom = 74.0
+custom_constants/separation = 0
+
+[node name="Feed1" type="Label" parent="HUD/BL/NewsFeed/VBoxContainer"]
+margin_right = 417.0
+margin_bottom = 37.0
 custom_fonts/font = SubResource( 14 )
 custom_styles/normal = SubResource( 13 )
 text = "THE PLANET IS GETTING TOO WARM"
+uppercase = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Feed2" type="Label" parent="HUD/BL/NewsFeed/VBoxContainer"]
+margin_top = 37.0
+margin_right = 417.0
+margin_bottom = 74.0
+custom_fonts/font = SubResource( 14 )
+custom_styles/normal = SubResource( 13 )
+text = "THE PLANET IS GETTING TOO WARM"
+uppercase = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -220,31 +329,58 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-margin_left = -100.0
+margin_left = -229.0
 margin_top = -27.0
+grow_horizontal = 0
+grow_vertical = 0
 custom_constants/separation = 0
-__meta__ = {
-"_edit_use_anchors_": false
-}
+alignment = 2
 
 [node name="MNY" type="Label" parent="HUD/BR"]
-margin_right = 43.0
+margin_left = 3.0
+margin_right = 46.0
 margin_bottom = 27.0
 size_flags_horizontal = 0
 custom_fonts/font = ExtResource( 2 )
 custom_styles/normal = SubResource( 12 )
 text = "MNY"
 
-[node name="$$" type="Label" parent="HUD/BR"]
-margin_left = 43.0
-margin_right = 100.0
+[node name="Money" type="Label" parent="HUD/BR"]
+margin_left = 46.0
+margin_right = 103.0
 margin_bottom = 27.0
 size_flags_horizontal = 0
 custom_colors/font_color = Color( 0, 1, 0.203922, 1 )
 custom_fonts/font = ExtResource( 2 )
 custom_styles/normal = SubResource( 12 )
 text = "$4,754"
+script = ExtResource( 8 )
+
+[node name="Temperature" type="Label" parent="HUD/BR"]
+margin_left = 103.0
+margin_right = 146.0
+margin_bottom = 27.0
+size_flags_horizontal = 0
+custom_fonts/font = ExtResource( 2 )
+custom_styles/normal = SubResource( 19 )
+text = "22°C"
+script = ExtResource( 9 )
+
+[node name="Date" type="Label" parent="HUD/BR"]
+margin_left = 146.0
+margin_right = 229.0
+margin_bottom = 27.0
+size_flags_horizontal = 5
+custom_fonts/font = ExtResource( 2 )
+custom_styles/normal = SubResource( 18 )
+text = "Apr 2022 "
+align = 3
+uppercase = true
+script = ExtResource( 6 )
 
 [node name="BuildingPlacement" type="Spatial" parent="."]
 script = ExtResource( 4 )
 camera = NodePath("../Camera Root/Camera")
+
+[node name="Game" type="Spatial" parent="."]
+script = ExtResource( 7 )

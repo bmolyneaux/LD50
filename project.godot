@@ -14,6 +14,17 @@ config/name="Climate Crisis"
 run/main_scene="res://planet/Planet.tscn"
 config/icon="res://icon.png"
 
+[autoload]
+
+State="*res://state/State.gd"
+
+[debug]
+
+gdscript/warnings/unused_argument=false
+gdscript/warnings/unused_signal=false
+gdscript/warnings/return_value_discarded=false
+gdscript/warnings/integer_division=false
+
 [editor_plugins]
 
 enabled=PoolStringArray( "res://addons/camera_monitor/plugin.cfg" )
@@ -24,5 +35,7 @@ common/enable_pause_aware_picking=true
 
 [rendering]
 
-quality/filters/msaa=4
+quality/driver/driver_name="GLES2"
+vram_compression/import_etc=true
+quality/filters/use_fxaa=true
 environment/default_environment="res://default_env.tres"

@@ -4,6 +4,7 @@
 export.cfg
 export_presets.cfg
 addons/
+export/
 
 # Mono-specific ignores
 .mono/
